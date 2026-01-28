@@ -3,278 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KMZ Command Center</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>Painel KMZ V4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --neon: #00f3ff; 
-            --bg: #050505; 
-            --card-bg: #111; 
-            --text: #e0e0e0; 
-        }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
-        
+        /* --- DESIGN SYSTEM KMZ --- */
         body { 
-            background-color: var(--bg); 
-            color: var(--text); 
+            background: #0a0a0a; 
+            color: #eee; 
             font-family: 'Rajdhani', sans-serif; 
             padding: 20px; 
-            min-height: 100vh;
+            margin: 0;
         }
-
+        
         /* Cabeçalho */
         header { 
-            border-bottom: 2px solid var(--neon); 
-            padding-bottom: 15px; 
-            margin-bottom: 30px; 
             display: flex; 
             justify-content: space-between; 
-            align-items: center;
+            align-items: center; 
+            border-bottom: 2px solid #333; 
+            padding-bottom: 20px; 
+            margin-bottom: 20px; 
         }
         
-        h1 { 
-            font-family: 'Orbitron', sans-serif; 
-            color: #fff; 
-            text-transform: uppercase; 
-            letter-spacing: 2px;
-        }
+        h1 { margin: 0; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        h1 span { color: #00d2ff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
         
-        h1 span { color: var(--neon); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); }
+        .btn-refresh { 
+            background: #222; color: #fff; border: 1px solid #444; 
+            padding: 10px 20px; cursor: pointer; border-radius: 5px; 
+            font-weight: bold; transition: 0.2s; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;
+        }
+        .btn-refresh:hover { background: #333; border-color: #00d2ff; color: #00d2ff; }
 
-        /* Grid de Cards */
+        /* Grid Responsivo */
         .grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
             gap: 20px; 
         }
         
-        .card {
-            background: var(--card-bg); 
+        /* CARTÕES (Tickets) */
+        .card { 
+            background: #141414; 
             border: 1px solid #333; 
-            border-radius: 12px; 
-            padding: 20px;
+            padding: 20px; 
+            border-radius: 10px; 
             cursor: pointer; 
-            transition: all 0.3s ease; 
             position: relative; 
+            transition: 0.3s; 
             overflow: hidden;
         }
+        .card:hover { transform: translateY(-5px); border-color: #555; }
         
-        .card:hover { 
-            transform: translateY(-5px); 
-            border-color: var(--neon); 
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); 
-        }
-        
-        /* Estilo Resolvido */
-        .card.resolvido { opacity: 0.6; border-color: #00ff66; }
-        .card.resolvido .status-badge { background: #00ff66; color: #000; }
-        .card.resolvido:hover { transform: none; box-shadow: none; }
+        /* Cores de Prioridade */
+        .card.prio-alta { border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.1); }
+        .card.prio-ideia { border-color: #aaff00; }
+        .card.resolvido { opacity: 0.5; border-color: #00ff66; }
 
-        /* Elementos do Card */
-        .header-card { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em; color: #666; }
-        .ticket-id { font-family: 'Orbitron', sans-serif; color: var(--neon); font-weight: bold; }
+        /* Etiquetas */
+        .badges { display: flex; gap: 5px; margin-bottom: 10px; }
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; }
+        .b-id { background: #333; color: #00d2ff; }
+        .b-prio { background: #444; color: #fff; }
         
-        .assunto { font-size: 1.2em; font-weight: 700; color: #fff; margin-bottom: 5px; display: block; }
-        .autor { color: #aaa; font-size: 0.95em; display: flex; align-items: center; gap: 5px; }
+        .prio-alta .b-prio { background: #ff3333; color: #000; }
+        .prio-ideia .b-prio { background: #aaff00; color: #000; }
+
+        .assunto { font-size: 1.3em; font-weight: 700; margin-bottom: 5px; color: #fff; display: block; }
+        .meta { font-size: 0.9em; color: #888; display: flex; align-items: center; gap: 5px; }
         
-        .status-badge { 
+        .status-float { 
             position: absolute; top: 0; right: 0; 
             background: #ffcc00; color: #000; 
-            padding: 3px 12px; font-size: 0.75em; font-weight: bold; 
-            border-bottom-left-radius: 10px; font-family: 'Orbitron', sans-serif;
+            padding: 4px 10px; font-weight: bold; 
+            font-size: 0.7em; border-bottom-left-radius: 8px; 
         }
+        .card.resolvido .status-float { background: #00ff66; }
 
         /* MODAL (Janela Flutuante) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px);
         }
-        
-        .modal-content {
-            background: #151515; border: 1px solid var(--neon); 
-            width: 90%; max-width: 700px; padding: 30px; 
-            border-radius: 15px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); 
-            position: relative; animation: slideUp 0.3s ease;
+        .modal-box { 
+            background: #1a1a1a; padding: 30px; width: 90%; max-width: 700px; 
+            border-radius: 12px; border: 1px solid #00d2ff; 
+            box-shadow: 0 0 40px rgba(0, 210, 255, 0.15); animation: zoomIn 0.2s;
         }
-        
-        @keyframes slideUp { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+        @keyframes zoomIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
 
-        .modal-header h2 { color: #fff; margin-bottom: 5px; }
-        .modal-meta { color: #888; margin-bottom: 20px; font-size: 0.9em; border-bottom: 1px solid #333; padding-bottom: 15px; }
-
+        .email-header { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
         .email-body { 
-            background: #000; padding: 20px; border-radius: 8px; border: 1px solid #333;
-            color: #ddd; font-family: monospace; white-space: pre-wrap; line-height: 1.5;
-            max-height: 300px; overflow-y: auto; margin-bottom: 25px;
+            background: #000; padding: 20px; margin-bottom: 25px; 
+            border-radius: 6px; border: 1px solid #333;
+            max-height: 400px; overflow-y: auto; white-space: pre-wrap; 
+            color: #ccc; font-family: monospace; line-height: 1.5;
         }
-
-        /* Botões de Ação */
+        
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
-        button { 
+        .actions button { 
             padding: 15px; border: none; border-radius: 6px; 
-            font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; 
-            text-transform: uppercase; transition: 0.2s; font-size: 0.9em;
+            cursor: pointer; font-weight: bold; text-transform: uppercase; 
+            font-family: 'Rajdhani', sans-serif; font-size: 1em;
         }
-        
-        .btn-reply { background: var(--neon); color: #000; }
+        .btn-reply { background: #00d2ff; color: #000; }
         .btn-reply:hover { background: #fff; box-shadow: 0 0 15px #fff; }
         
-        .btn-resolve { background: transparent; border: 1px solid #444; color: #fff; }
+        .btn-resolve { background: transparent; border: 1px solid #555; color: #fff; }
         .btn-resolve:hover { border-color: #00ff66; color: #00ff66; background: rgba(0, 255, 102, 0.1); }
         
-        .btn-close { 
-            position: absolute; top: 15px; right: 20px; 
-            background: none; color: #fff; font-size: 2em; padding: 0;
-        }
-        .btn-close:hover { color: var(--neon); transform: scale(1.1); }
+        .btn-close { float: right; background: none; color: #fff; font-size: 2em; cursor: pointer; border: none; margin-top: -15px; margin-right: -10px;}
+        .btn-close:hover { color: #00d2ff; }
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>KMZ <span>SUPPORT</span></h1>
-        <div style="color:#666; font-size:0.9em;">STATUS: ONLINE</div>
+        <h1>KMZ <span>DASHBOARD</span></h1>
+        <button class="btn-refresh" onclick="carregar()">🔄 Atualizar Lista</button>
     </header>
     
-    <div id="loading" style="text-align:center; color: var(--neon); margin-top: 50px;">
-        Conectando ao servidor KMZ...
+    <div id="loading" style="text-align:center; color:#666; margin-top: 50px;">
+        <p>📡 Estabelecendo conexão via satélite...</p>
     </div>
     
     <div id="grid" class="grid"></div>
 
-    <div id="modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="btn-close" onclick="fecharModal()">&times;</button>
+    <div id="modal" class="modal">
+        <div class="modal-box">
+            <button class="btn-close" onclick="fechar()">&times;</button>
             
-            <div class="modal-header">
-                <h2 id="m-assunto">Assunto do Email</h2>
-                <div id="m-meta" class="modal-meta">De: Kauã • Ticket #KMZ-000</div>
+            <div class="email-header">
+                <h2 id="m-assunto" style="margin:0 0 10px 0; color:#fff;">Assunto</h2>
+                <div id="m-meta" style="color:#888">De: Nome (email)</div>
             </div>
             
-            <div id="m-texto" class="email-body">Carregando conteúdo...</div>
+            <div id="m-texto" class="email-body">Carregando...</div>
             
             <div class="actions">
-                <button class="btn-resolve" onclick="marcarResolvido()">✅ Marcar Resolvido</button>
-                <button class="btn-reply" onclick="responderEmail()">🚀 Responder Email</button>
+                <button class="btn-reply" onclick="responder()">🚀 Responder Email</button>
+                <button class="btn-resolve" onclick="marcarResolvido()">✅ Resolver e Notificar</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- SUA URL GERADA PELO APPS SCRIPT ---
-        const API_URL = "https://script.google.com/macros/s/AKfycbzcyQ79MTv2cmL9kUxX569oEJWJmrxc8N00syVu9TuOLLal6YwUHzyPje5RohN2FCEcdQ/exec"; 
+        // --- SEU LINK NOVO ESTÁ AQUI ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbw6yhAKLti3bd4wD-esXfHNbrEucH1eHaWLbWeWTq6o9qHpE8Nq03y3fd_dRddNIZSQYg/exec"; 
 
-        let listaTickets = [];
-        let ticketAtual = null;
+        let lista = [];
+        let atual = null;
 
-        // 1. Carregar Dados
+        // 1. CARREGAR DADOS
         async function carregar() {
+            const load = document.getElementById('loading');
+            const grid = document.getElementById('grid');
+            
+            load.style.display = 'block';
+            grid.innerHTML = '';
+            
             try {
-                const req = await fetch(API_URL);
-                const dados = await req.json();
+                const res = await fetch(API_URL);
+                const dados = await res.json();
                 
-                // Ordenar: Mais recentes primeiro e Resolvidos pro final
-                listaTickets = dados.reverse().sort((a, b) => {
-                    return (a.status === 'Resolvido') - (b.status === 'Resolvido');
+                // Lógica de Ordenação: 
+                // 1º Tickets Abertos (Alta > Normal > Ideia)
+                // 2º Tickets Resolvidos (ficam no final)
+                const peso = { "ALTA": 3, "Normal": 2, "IDEIA": 1 };
+                
+                lista = dados.sort((a, b) => {
+                    if (a.status === 'Resolvido' && b.status !== 'Resolvido') return 1;
+                    if (a.status !== 'Resolvido' && b.status === 'Resolvido') return -1;
+                    return (peso[b.prioridade] || 0) - (peso[a.prioridade] || 0);
                 });
 
                 renderizar();
-                document.getElementById('loading').style.display = 'none';
-            } catch (erro) {
-                document.getElementById('loading').innerHTML = `Erro de conexão.<br>Verifique se a implantação está como "Qualquer Pessoa".`;
-                console.error(erro);
+                load.style.display = 'none';
+            } catch(e) {
+                load.innerHTML = `<span style="color:red">Erro de conexão.</span><br>Verifique se o Apps Script foi implantado como "Qualquer Pessoa".`;
+                console.error(e);
             }
         }
 
-        // 2. Renderizar Cards
+        // 2. DESENHAR TELA
         function renderizar() {
             const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            
-            if (listaTickets.length === 0) {
-                grid.innerHTML = '<p style="color:#666">Nenhum chamado encontrado.</p>';
+            if(lista.length === 0) {
+                grid.innerHTML = '<p style="color:#666">Nenhum chamado pendente no momento.</p>';
                 return;
             }
 
-            listaTickets.forEach(ticket => {
+            lista.forEach(t => {
+                let classeExtra = "";
+                if (t.prioridade === 'ALTA') classeExtra = "prio-alta";
+                if (t.prioridade === 'IDEIA') classeExtra = "prio-ideia";
+                if (t.status === 'Resolvido') classeExtra = "resolvido";
+
                 const div = document.createElement('div');
-                div.className = `card ${ticket.status === 'Resolvido' ? 'resolvido' : ''}`;
-                div.onclick = () => abrirModal(ticket);
+                div.className = `card ${classeExtra}`;
+                div.onclick = () => abrir(t);
                 
+                // Formata data curta
+                const dataCurta = t.data.split(' ')[0];
+
                 div.innerHTML = `
-                    <div class="status-badge">${ticket.status}</div>
-                    <div class="header-card">
-                        <span class="ticket-id">${ticket.id}</span>
-                        <span>${ticket.data.split(' ')[0]}</span>
+                    <div class="status-float">${t.status}</div>
+                    <div class="badges">
+                        <span class="badge b-id">${t.id}</span>
+                        <span class="badge b-prio">${t.prioridade}</span>
                     </div>
-                    <span class="assunto">${ticket.assunto}</span>
-                    <div class="autor">👤 ${ticket.nome}</div>
+                    <span class="assunto">${t.assunto}</span>
+                    <div class="meta">👤 ${t.nome} • 📅 ${dataCurta}</div>
                 `;
                 grid.appendChild(div);
             });
         }
 
-        // 3. Funções do Modal
-        function abrirModal(ticket) {
-            ticketAtual = ticket;
-            const modal = document.getElementById('modal');
-            
-            document.getElementById('m-assunto').innerText = ticket.assunto;
-            document.getElementById('m-meta').innerText = `De: ${ticket.nome} (${ticket.email}) • ${ticket.data}`;
-            document.getElementById('m-texto').innerText = ticket.corpo;
-            
-            modal.style.display = 'flex';
+        // 3. FUNÇÕES MODAL
+        function abrir(t) {
+            atual = t;
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('m-assunto').innerText = t.assunto;
+            document.getElementById('m-meta').innerText = `De: ${t.nome} (${t.email}) | ${t.id}`;
+            document.getElementById('m-texto').innerText = t.corpo;
         }
 
-        function fecharModal() {
-            document.getElementById('modal').style.display = 'none';
-        }
+        function fechar() { document.getElementById('modal').style.display = 'none'; }
 
-        // 4. Ações
-        function responderEmail() {
-            // Cria o link mailto inteligente
-            const assunto = encodeURIComponent(`Re: ${ticketAtual.assunto} [${ticketAtual.id}]`);
-            const corpo = encodeURIComponent(`\n\n\n---\nEm resposta ao chamado ${ticketAtual.id}:\n${ticketAtual.resumo}`);
-            window.open(`mailto:${ticketAtual.email}?subject=${assunto}&body=${corpo}`);
-            
-            // Pergunta opcional se quer já resolver
-            setTimeout(() => {
-                if(confirm("Você respondeu o email. Deseja marcar o ticket como RESOLVIDO agora?")) {
-                    marcarResolvido();
-                }
-            }, 1000);
+        // 4. AÇÕES
+        function responder() {
+            const assunto = encodeURIComponent(`Re: ${atual.assunto} [${atual.id}]`);
+            const corpo = encodeURIComponent(`\n\n\n---\nEm resposta ao ticket ${atual.id}:\n${atual.resumo}`);
+            window.open(`mailto:${atual.email}?subject=${assunto}&body=${corpo}`);
         }
 
         async function marcarResolvido() {
-            if(!ticketAtual || ticketAtual.status === 'Resolvido') return;
+            if(!confirm("Isso vai fechar o ticket e enviar um email automático para o cliente. Confirmar?")) return;
             
-            // Atualização Otimista (Muda na tela antes de confirmar no servidor)
+            // Feedback instantâneo
             const btn = document.querySelector('.btn-resolve');
-            const textoOriginal = btn.innerText;
-            btn.innerText = "Salvando...";
+            btn.innerText = "⏳ Processando...";
             
-            // Envia comando pro Google
+            // Envia para o Google
             await fetch(API_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Importante para funcionar sem erro de bloqueio
-                body: JSON.stringify({ id: ticketAtual.id })
+                mode: 'no-cors', // Essencial para funcionar
+                body: JSON.stringify({id: atual.id})
             });
 
-            // Atualiza dados locais
-            ticketAtual.status = 'Resolvido';
-            fecharModal();
-            carregar(); // Recarrega a lista para reordenar
-            alert("Ticket atualizado para Resolvido!");
+            // Atualiza localmente
+            alert("Sucesso! O cliente foi notificado.");
+            atual.status = 'Resolvido';
+            fechar();
+            carregar(); // Recarrega para mover pro final da lista
+            
+            // Reseta botão
+            btn.innerText = "✅ Resolver e Notificar";
         }
 
-        // Iniciar
+        // Inicia
         carregar();
 
     </script>
-
 </body>
 </html>
