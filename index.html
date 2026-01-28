@@ -3,159 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Suporte KMZ</title>
+    <title>KMZ Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Design System KMZ: Dark Mode & Neon */
+        :root { 
+            --neon: #00f3ff; 
+            --bg: #050505; 
+            --card-bg: #111; 
+            --text: #e0e0e0; 
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        
         body { 
-            background-color: #0f0f13; 
-            color: #e0e0e0; 
-            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
-            padding: 40px; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            font-family: 'Rajdhani', sans-serif; 
+            padding: 20px; 
+            min-height: 100vh;
+        }
+
+        /* Cabeçalho */
+        header { 
+            border-bottom: 2px solid var(--neon); 
+            padding-bottom: 15px; 
+            margin-bottom: 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
         }
         
         h1 { 
+            font-family: 'Orbitron', sans-serif; 
             color: #fff; 
-            font-weight: 300; 
-            border-left: 5px solid #00d2ff; 
-            padding-left: 15px; 
-            margin-bottom: 30px;
-        }
-
-        /* Grid Responsivo */
-        .container { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
-            gap: 25px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
         }
         
-        /* Estilo do Card (Ticket) */
+        h1 span { color: var(--neon); text-shadow: 0 0 10px rgba(0, 243, 255, 0.6); }
+
+        /* Grid de Cards */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 20px; 
+        }
+        
         .card {
-            background: #1a1a20;
-            border: 1px solid #333;
-            border-radius: 12px;
+            background: var(--card-bg); 
+            border: 1px solid #333; 
+            border-radius: 12px; 
             padding: 20px;
-            transition: all 0.3s ease;
-            position: relative;
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            position: relative; 
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
         .card:hover { 
             transform: translateY(-5px); 
-            border-color: #00d2ff; 
-            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.1); 
+            border-color: var(--neon); 
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); 
         }
         
-        /* Detalhes do Texto */
-        .header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .ticket-id { background: #333; color: #00d2ff; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
-        .data { color: #666; font-size: 0.8em; align-self: center; }
+        /* Estilo Resolvido */
+        .card.resolvido { opacity: 0.6; border-color: #00ff66; }
+        .card.resolvido .status-badge { background: #00ff66; color: #000; }
+        .card.resolvido:hover { transform: none; box-shadow: none; }
+
+        /* Elementos do Card */
+        .header-card { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em; color: #666; }
+        .ticket-id { font-family: 'Orbitron', sans-serif; color: var(--neon); font-weight: bold; }
         
-        .assunto { font-size: 1.1em; font-weight: 600; color: #fff; margin-bottom: 10px; display: block; }
-        .autor { color: #888; font-size: 0.9em; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
-        .autor strong { color: #ccc; }
-
-        .resumo { 
-            background: #121215; 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-size: 0.9em; 
-            color: #aaa; 
-            margin-bottom: 20px; 
-            border-left: 2px solid #333;
+        .assunto { font-size: 1.2em; font-weight: 700; color: #fff; margin-bottom: 5px; display: block; }
+        .autor { color: #aaa; font-size: 0.95em; display: flex; align-items: center; gap: 5px; }
+        
+        .status-badge { 
+            position: absolute; top: 0; right: 0; 
+            background: #ffcc00; color: #000; 
+            padding: 3px 12px; font-size: 0.75em; font-weight: bold; 
+            border-bottom-left-radius: 10px; font-family: 'Orbitron', sans-serif;
         }
 
-        /* Botão de Ação */
-        .btn-responder {
-            display: block;
-            width: 100%;
-            text-align: center;
-            background: transparent;
-            border: 1px solid #00d2ff;
-            color: #00d2ff;
-            padding: 10px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: 0.2s;
+        /* MODAL (Janela Flutuante) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-        .btn-responder:hover { background: #00d2ff; color: #000; }
+        
+        .modal-content {
+            background: #151515; border: 1px solid var(--neon); 
+            width: 90%; max-width: 700px; padding: 30px; 
+            border-radius: 15px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); 
+            position: relative; animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
 
-        /* Status Badge */
-        .status { position: absolute; top: 0; right: 0; background: #ffcc00; color: #000; font-size: 0.6em; padding: 2px 10px; border-bottom-left-radius: 8px; font-weight: bold; text-transform: uppercase;}
+        .modal-header h2 { color: #fff; margin-bottom: 5px; }
+        .modal-meta { color: #888; margin-bottom: 20px; font-size: 0.9em; border-bottom: 1px solid #333; padding-bottom: 15px; }
+
+        .email-body { 
+            background: #000; padding: 20px; border-radius: 8px; border: 1px solid #333;
+            color: #ddd; font-family: monospace; white-space: pre-wrap; line-height: 1.5;
+            max-height: 300px; overflow-y: auto; margin-bottom: 25px;
+        }
+
+        /* Botões de Ação */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        button { 
+            padding: 15px; border: none; border-radius: 6px; 
+            font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; 
+            text-transform: uppercase; transition: 0.2s; font-size: 0.9em;
+        }
+        
+        .btn-reply { background: var(--neon); color: #000; }
+        .btn-reply:hover { background: #fff; box-shadow: 0 0 15px #fff; }
+        
+        .btn-resolve { background: transparent; border: 1px solid #444; color: #fff; }
+        .btn-resolve:hover { border-color: #00ff66; color: #00ff66; background: rgba(0, 255, 102, 0.1); }
+        
+        .btn-close { 
+            position: absolute; top: 15px; right: 20px; 
+            background: none; color: #fff; font-size: 2em; padding: 0;
+        }
+        .btn-close:hover { color: var(--neon); transform: scale(1.1); }
+
     </style>
 </head>
 <body>
 
-    <h1>Painel de Controle <span style="color:#00d2ff">KMZ</span></h1>
+    <header>
+        <h1>KMZ <span>SUPPORT</span></h1>
+        <div style="color:#666; font-size:0.9em;">STATUS: ONLINE</div>
+    </header>
     
-    <div id="loading" style="color:#666;">Carregando tickets do servidor...</div>
+    <div id="loading" style="text-align:center; color: var(--neon); margin-top: 50px;">
+        Conectando ao servidor KMZ...
+    </div>
     
-    <div id="painel" class="container"></div>
+    <div id="grid" class="grid"></div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="btn-close" onclick="fecharModal()">&times;</button>
+            
+            <div class="modal-header">
+                <h2 id="m-assunto">Assunto do Email</h2>
+                <div id="m-meta" class="modal-meta">De: Kauã • Ticket #KMZ-000</div>
+            </div>
+            
+            <div id="m-texto" class="email-body">Carregando conteúdo...</div>
+            
+            <div class="actions">
+                <button class="btn-resolve" onclick="marcarResolvido()">✅ Marcar Resolvido</button>
+                <button class="btn-reply" onclick="responderEmail()">🚀 Responder Email</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
-        // Corrigi o link trocando 'pubhtml' por 'pub?output=csv'
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR8mazSWZgbOk_Z79g-f6R6o1juy00xJE0XghEEjWftSXUm3LcWGHt9uG0zFpUHQKOWvdxAVcYf6p_r/pub?gid=0&single=true&output=csv'; 
+        // --- SUA URL GERADA PELO APPS SCRIPT ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbzcyQ79MTv2cmL9kUxX569oEJWJmrxc8N00syVu9TuOLLal6YwUHzyPje5RohN2FCEcdQ/exec"; 
 
-        async function carregarTickets() {
+        let listaTickets = [];
+        let ticketAtual = null;
+
+        // 1. Carregar Dados
+        async function carregar() {
             try {
-                const resposta = await fetch(SHEET_CSV_URL);
-                const texto = await resposta.text();
+                const req = await fetch(API_URL);
+                const dados = await req.json();
                 
-                // Transforma CSV em linhas e remove cabeçalho
-                const linhas = texto.split('\n').slice(1);
-                
-                const painel = document.getElementById('painel');
-                document.getElementById('loading').style.display = 'none';
-
-                linhas.forEach(linha => {
-                    // Regex para separar por vírgula mas respeitar aspas
-                    const colunas = linha.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    
-                    if(colunas.length < 5) return; // Pula linhas vazias
-
-                    // SEU MAPA DE COLUNAS (Ordem Ticket > Data > Nome > Email > Assunto > Resumo > Status)
-                    const id = colunas[0].replace(/"/g, '');
-                    const data = colunas[1].replace(/"/g, '');
-                    const nome = colunas[2].replace(/"/g, '');
-                    const email = colunas[3].replace(/"/g, '');
-                    const assunto = colunas[4].replace(/"/g, '');
-                    const resumo = colunas[5] ? colunas[5].replace(/"/g, '') : "Sem detalhes";
-                    
-                    // Link para abrir o Gmail respondendo
-                    const linkResponder = `mailto:${email}?subject=Re: ${assunto} [${id}]`;
-
-                    // Criando o Card
-                    const div = document.createElement('div');
-                    div.className = 'card';
-                    div.innerHTML = `
-                        <div class="status">Pendente</div>
-                        <div class="header">
-                            <span class="ticket-id">${id}</span>
-                            <span class="data">${data}</span>
-                        </div>
-                        <span class="assunto">${assunto}</span>
-                        <div class="autor">
-                             De: <strong>${nome}</strong>
-                        </div>
-                        <div class="resumo">${resumo}</div>
-                        <a href="${linkResponder}" class="btn-responder">Responder Email</a>
-                    `;
-                    painel.appendChild(div);
+                // Ordenar: Mais recentes primeiro e Resolvidos pro final
+                listaTickets = dados.reverse().sort((a, b) => {
+                    return (a.status === 'Resolvido') - (b.status === 'Resolvido');
                 });
 
-                if(linhas.length === 0) {
-                    painel.innerHTML = '<p>Nenhum chamado encontrado na planilha.</p>';
-                }
-
+                renderizar();
+                document.getElementById('loading').style.display = 'none';
             } catch (erro) {
+                document.getElementById('loading').innerHTML = `Erro de conexão.<br>Verifique se a implantação está como "Qualquer Pessoa".`;
                 console.error(erro);
-                document.getElementById('loading').innerHTML = 'Erro ao carregar. Verifique se publicou como CSV.';
             }
         }
 
-        carregarTickets();
+        // 2. Renderizar Cards
+        function renderizar() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            if (listaTickets.length === 0) {
+                grid.innerHTML = '<p style="color:#666">Nenhum chamado encontrado.</p>';
+                return;
+            }
+
+            listaTickets.forEach(ticket => {
+                const div = document.createElement('div');
+                div.className = `card ${ticket.status === 'Resolvido' ? 'resolvido' : ''}`;
+                div.onclick = () => abrirModal(ticket);
+                
+                div.innerHTML = `
+                    <div class="status-badge">${ticket.status}</div>
+                    <div class="header-card">
+                        <span class="ticket-id">${ticket.id}</span>
+                        <span>${ticket.data.split(' ')[0]}</span>
+                    </div>
+                    <span class="assunto">${ticket.assunto}</span>
+                    <div class="autor">👤 ${ticket.nome}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // 3. Funções do Modal
+        function abrirModal(ticket) {
+            ticketAtual = ticket;
+            const modal = document.getElementById('modal');
+            
+            document.getElementById('m-assunto').innerText = ticket.assunto;
+            document.getElementById('m-meta').innerText = `De: ${ticket.nome} (${ticket.email}) • ${ticket.data}`;
+            document.getElementById('m-texto').innerText = ticket.corpo;
+            
+            modal.style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 4. Ações
+        function responderEmail() {
+            // Cria o link mailto inteligente
+            const assunto = encodeURIComponent(`Re: ${ticketAtual.assunto} [${ticketAtual.id}]`);
+            const corpo = encodeURIComponent(`\n\n\n---\nEm resposta ao chamado ${ticketAtual.id}:\n${ticketAtual.resumo}`);
+            window.open(`mailto:${ticketAtual.email}?subject=${assunto}&body=${corpo}`);
+            
+            // Pergunta opcional se quer já resolver
+            setTimeout(() => {
+                if(confirm("Você respondeu o email. Deseja marcar o ticket como RESOLVIDO agora?")) {
+                    marcarResolvido();
+                }
+            }, 1000);
+        }
+
+        async function marcarResolvido() {
+            if(!ticketAtual || ticketAtual.status === 'Resolvido') return;
+            
+            // Atualização Otimista (Muda na tela antes de confirmar no servidor)
+            const btn = document.querySelector('.btn-resolve');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "Salvando...";
+            
+            // Envia comando pro Google
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Importante para funcionar sem erro de bloqueio
+                body: JSON.stringify({ id: ticketAtual.id })
+            });
+
+            // Atualiza dados locais
+            ticketAtual.status = 'Resolvido';
+            fecharModal();
+            carregar(); // Recarrega a lista para reordenar
+            alert("Ticket atualizado para Resolvido!");
+        }
+
+        // Iniciar
+        carregar();
+
     </script>
 
 </body>
