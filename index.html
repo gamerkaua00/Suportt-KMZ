@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Suporte KMZ</title>
+    <style>
+        /* Design System KMZ: Dark Mode & Neon */
+        body { 
+            background-color: #0f0f13; 
+            color: #e0e0e0; 
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; 
+            padding: 40px; 
+        }
+        
+        h1 { 
+            color: #fff; 
+            font-weight: 300; 
+            border-left: 5px solid #00d2ff; 
+            padding-left: 15px; 
+            margin-bottom: 30px;
+        }
+
+        /* Grid Responsivo */
+        .container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 25px; 
+        }
+        
+        /* Estilo do Card (Ticket) */
+        .card {
+            background: #1a1a20;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .card:hover { 
+            transform: translateY(-5px); 
+            border-color: #00d2ff; 
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.1); 
+        }
+        
+        /* Detalhes do Texto */
+        .header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .ticket-id { background: #333; color: #00d2ff; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .data { color: #666; font-size: 0.8em; align-self: center; }
+        
+        .assunto { font-size: 1.1em; font-weight: 600; color: #fff; margin-bottom: 10px; display: block; }
+        .autor { color: #888; font-size: 0.9em; margin-bottom: 15px; display: flex; align-items: center; gap: 5px;}
+        .autor strong { color: #ccc; }
+
+        .resumo { 
+            background: #121215; 
+            padding: 10px; 
+            border-radius: 6px; 
+            font-size: 0.9em; 
+            color: #aaa; 
+            margin-bottom: 20px; 
+            border-left: 2px solid #333;
+        }
+
+        /* Botão de Ação */
+        .btn-responder {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: transparent;
+            border: 1px solid #00d2ff;
+            color: #00d2ff;
+            padding: 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-responder:hover { background: #00d2ff; color: #000; }
+
+        /* Status Badge */
+        .status { position: absolute; top: 0; right: 0; background: #ffcc00; color: #000; font-size: 0.6em; padding: 2px 10px; border-bottom-left-radius: 8px; font-weight: bold; text-transform: uppercase;}
+    </style>
+</head>
+<body>
+
+    <h1>Painel de Controle <span style="color:#00d2ff">KMZ</span></h1>
+    
+    <div id="loading" style="color:#666;">Carregando tickets do servidor...</div>
+    
+    <div id="painel" class="container"></div>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        // Corrigi o link trocando 'pubhtml' por 'pub?output=csv'
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR8mazSWZgbOk_Z79g-f6R6o1juy00xJE0XghEEjWftSXUm3LcWGHt9uG0zFpUHQKOWvdxAVcYf6p_r/pub?gid=0&single=true&output=csv'; 
+
+        async function carregarTickets() {
+            try {
+                const resposta = await fetch(SHEET_CSV_URL);
+                const texto = await resposta.text();
+                
+                // Transforma CSV em linhas e remove cabeçalho
+                const linhas = texto.split('\n').slice(1);
+                
+                const painel = document.getElementById('painel');
+                document.getElementById('loading').style.display = 'none';
+
+                linhas.forEach(linha => {
+                    // Regex para separar por vírgula mas respeitar aspas
+                    const colunas = linha.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    if(colunas.length < 5) return; // Pula linhas vazias
+
+                    // SEU MAPA DE COLUNAS (Ordem Ticket > Data > Nome > Email > Assunto > Resumo > Status)
+                    const id = colunas[0].replace(/"/g, '');
+                    const data = colunas[1].replace(/"/g, '');
+                    const nome = colunas[2].replace(/"/g, '');
+                    const email = colunas[3].replace(/"/g, '');
+                    const assunto = colunas[4].replace(/"/g, '');
+                    const resumo = colunas[5] ? colunas[5].replace(/"/g, '') : "Sem detalhes";
+                    
+                    // Link para abrir o Gmail respondendo
+                    const linkResponder = `mailto:${email}?subject=Re: ${assunto} [${id}]`;
+
+                    // Criando o Card
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.innerHTML = `
+                        <div class="status">Pendente</div>
+                        <div class="header">
+                            <span class="ticket-id">${id}</span>
+                            <span class="data">${data}</span>
+                        </div>
+                        <span class="assunto">${assunto}</span>
+                        <div class="autor">
+                             De: <strong>${nome}</strong>
+                        </div>
+                        <div class="resumo">${resumo}</div>
+                        <a href="${linkResponder}" class="btn-responder">Responder Email</a>
+                    `;
+                    painel.appendChild(div);
+                });
+
+                if(linhas.length === 0) {
+                    painel.innerHTML = '<p>Nenhum chamado encontrado na planilha.</p>';
+                }
+
+            } catch (erro) {
+                console.error(erro);
+                document.getElementById('loading').innerHTML = 'Erro ao carregar. Verifique se publicou como CSV.';
+            }
+        }
+
+        carregarTickets();
+    </script>
+
+</body>
+</html>
